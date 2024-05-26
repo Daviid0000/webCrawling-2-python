@@ -1,32 +1,40 @@
 import requests
 from bs4 import BeautifulSoup
 import wget
-# from os import mkdir
 from os import mkdir
-import pprint
 
 url = "https://www.netflix.com/ar/"
-
+ruta = "./carpeta"
 
 
 try:
   def funcionPeticion():
     response = requests.get(url)
     print("¡La petición fue un exito!")
-    mkdir("Imágenes")
-    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    try:
+      mkdir(ruta)
+      soup = BeautifulSoup(response.text, 'html.parser')
 
-    img = soup.find_all('img')
+      img = soup.find_all('img')
+      if img:
+        try:
+          for imagen in img:
+            urlImagen = imagen.get('src')
+            print(f"url de imagen: {urlImagen}")
 
-    for imagen in img:
-      urlImagen = imagen.get('src')
-      print(f"url de imagen: {urlImagen}")
+            wget.download(urlImagen, ruta)
+        except requests.exceptions.ConnectionError:
+          pass
 
-      # descargaImagen = wget.download(urlImagen)
-      # print(f"Imagen descargada: {descargaImagen}")
+      else:
+        print("Proceso detenido: imagen no encontrada")
+    except FileExistsError:
+      print("Proceso detenido: La carpeta ya existe")
 
-    # pprint.pprint(f"imagen: {img}")
   funcionPeticion()
 
-except requests.exceptions.RequestException:
-  print("La petición falló")
+except requests.exceptions.ConnectionError:
+  print("Proceso detenido: Fallo en la  conexión")
+except requests.exceptions.HTTPError:
+  print("Error en la solicitud HTTP")
